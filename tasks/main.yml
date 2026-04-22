@@ -1,0 +1,109 @@
+#SPDX-License-Identifier: MIT-0
+# tasks file for ansible-role-TPL
+
+---
+
+- name: Mise à jour du conteneur
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Installer les paquets nécessaires
+  apt:
+    name:
+      - apache2
+      - php
+      - libapache2-mod-php
+    state: present
+
+- name: Suppression de la page d'accueil par défaut d'Apache
+  file:
+    path: /var/www/html/index.html
+    state: absent
+
+- name: Démarrage de Apache et MariaDB
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - apache2
+    - mariadb
+
+- name: Attente du démarrage de MariaDB avec sleep
+  wait_for:
+    timeout: 10
+
+- name: Sécurisation de MariaDB avec mysql
+  mysql_secure_installation:
+    login_user: root
+    login_password: ""
+    new_password: "root"
+    remove_anonymous_users: yes
+    disallow_root_login_remotely: yes
+    remove_test_db: yes
+    state: present
+
+- name: Création de la base de données WordPress
+  mysql_db:
+    name: wordpress
+    state: present
+    login_user: root
+    login_password: "root"  
+
+- name: Téléchargement de WordPress
+  get_url:
+    url: https://wordpress.org/latest.zip
+    dest: /tmp/wordpress.zip
+    mode: "0755"
+
+- name: Extraction de WordPress
+  unarchive:
+    src: latest.zip
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: Création automatique du fichier wp-config.php
+  copy:
+    dest: /var/www/html/wordpress/wp-config.php
+    mode: "0640"
+    content: |
+      <?php
+      define('DB_NAME', 'wordpress');
+      define('DB_USER', 'root');
+      define('DB_PASSWORD', 'root');
+      define('DB_HOST', 'localhost');
+      define('DB_CHARSET', 'utf8');
+
+- name: Configuration d'Apache pour WordPress
+  copy:
+    dest: /etc/apache2/sites-available/wordpress.conf
+    mode: "0644"
+    content: |
+      <VirtualHost *:80>
+          ServerAdmin admin@localhost
+          DocumentRoot /var/www/html/wordpress
+          <Directory /var/www/html/wordpress> 
+             AllowOverride All 
+          </Directory>
+          ErrorLog \${APACHE_LOG_DIR}/error.log
+          CustomLog \${APACHE_LOG_DIR}/access.log combined
+      </VirtualHost>
+
+- name: Activation du site WordPress
+  command: a2ensite wordpress.conf
+  notify: Reload Apache2
+
+- name: Activation du module rewrite d'Apache
+  command: a2enmod rewrite
+  notify: Reload Apache2
+
+- name: Redémarrage d'Apache pour appliquer les changements
+  service:
+    name: apache2
+    state: restarted
+
+- name: Confirmation de l'installation de WordPress
+  uri:
+    url: http://localhost/wordpress
+    status_code: 200
