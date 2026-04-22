@@ -1,0 +1,17 @@
+---
+
+- name: "Démarrer et activer MariaDB"
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true
+  notify: "enable mariadb"
+  
+
+- name: "Démarrer et activer Apache / httpd"
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: true
+  notify: "enable apache"
+ 

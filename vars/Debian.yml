@@ -1,0 +1,23 @@
+---
+# vars/Debian.yml — Variables spécifiques Ubuntu / Debian
+
+wordpress_packages:
+  - apache2
+  - libapache2-mod-php
+  - php
+  - php-mysql
+  - php-curl
+  - php-gd
+  - php-mbstring
+  - php-xml
+  - php-zip
+  - mariadb-server
+  - python3-pymysql  
+  - wget
+  - unzip
+
+apache_service: "apache2"
+apache_conf_dir: "/etc/apache2/sites-available"
+apache_conf_file: "wordpress.conf"
+apache_user: "www-data"
+apache_group: "www-data"

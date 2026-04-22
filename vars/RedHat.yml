@@ -1,0 +1,22 @@
+---
+# vars/RedHat.yml — Variables spécifiques Rocky Linux / AlmaLinux / RHEL
+
+wordpress_packages:
+  - httpd
+  - php
+  - php-mysqlnd
+  - php-curl
+  - php-gd
+  - php-mbstring
+  - php-xml
+  - php-zip
+  - mariadb-server
+  - python3-PyMySQL   
+  - wget
+  - unzip
+
+apache_service: "httpd"
+apache_conf_dir: "/etc/httpd/conf.d"
+apache_conf_file: "wordpress.conf"
+apache_user: "apache"
+apache_group: "apache"
